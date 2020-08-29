@@ -1,0 +1,24 @@
+
+* Thins to do
+
+** TODO build a new format
+
+* Q&A
+
+* How to read a file into the system
+  
+#+BEGIN_SRC rust
+use std::fs;
+
+fs::read_from_strings
+#+END_SRC
+
+
+* How to parse stuff?
+
+You need to have a struct!
+
+
+* What is the good crate to use for file path manipulation in Rust?
+
+std::path::Path
