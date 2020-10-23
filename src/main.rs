@@ -1,6 +1,7 @@
 use chrono::format::strftime::StrftimeItems;
 use chrono::NaiveDateTime;
 use skim::prelude::*;
+use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
@@ -36,7 +37,7 @@ impl History {
 // 89563 @@@ 1603443779 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hi
 // 89563 @@@ 1603443782 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hello world
 
-fn parse_content(example: &str) -> History {
+fn parse_content(example: &str) -> Option<History> {
     // let example =
     //     "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
     let re = regex::Regex::new(r"\s*@@@\s*").unwrap();
@@ -49,17 +50,24 @@ fn parse_content(example: &str) -> History {
 
     let a = History::new(pid, timestamp, pwd, command);
 
-    a
+    Some(a)
 }
 
+static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history.test";
+
 fn main() -> io::Result<()> {
-    let history = File::open("toy.txt")?;
+    let config_dir_op = std::env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute())
+        .or_else(|| dirs::home_dir().map(|d| d.join(ETERNAL_HISTORY_FILE)));
+
+    let history = File::open(config_dir_op.unwrap())?;
     let history = BufReader::new(history);
 
     let mut my_commands: Vec<String> = Vec::new();
     for line in history.lines() {
         let myline = line.unwrap();
-        let parsed = parse_content(&myline);
+        let parsed = parse_content(&myline).unwrap();
         my_commands.push(parsed.command);
     }
 
