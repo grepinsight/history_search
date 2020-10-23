@@ -1,5 +1,11 @@
+use chrono::format::strftime::StrftimeItems;
 use chrono::NaiveDateTime;
+use skim::prelude::*;
 use std::fs;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::Cursor;
+use std::io::{self, BufReader};
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -19,35 +25,65 @@ impl History {
             command,
         }
     }
+
+    pub fn isodate(&self) -> String {
+        let date_time = NaiveDateTime::from_timestamp(self.timestamp, 0);
+
+        date_time.to_string()
+    }
 }
 
 // 89563 @@@ 1603443779 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hi
 // 89563 @@@ 1603443782 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hello world
 
-fn parse_content() {
-    let example =
-        "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
+fn parse_content(example: &str) -> History {
+    // let example =
+    //     "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
     let re = regex::Regex::new(r"\s*@@@\s*").unwrap();
     let parts: Vec<&str> = re.split(example).collect();
-    println!("{:?}", parts);
+
+    let pid: i64 = parts[0].parse().unwrap();
+    let timestamp: i64 = parts[1].parse().unwrap();
+    let pwd = PathBuf::from(parts[2]);
+    let command = parts[3].to_string();
+
+    let a = History::new(pid, timestamp, pwd, command);
+
+    a
 }
 
-fn main() {
-    let content = fs::read_to_string("toy.txt").expect("Fail to read the file");
-    parse_content();
+fn main() -> io::Result<()> {
+    let history = File::open("toy.txt")?;
+    let history = BufReader::new(history);
 
-    // let a = History::new(
-    //     1234,
-    //     String::from("allee"),
-    //     1589008111,
-    //     String::from("ls"),
-    //     PathBuf::from("/Users/allee/src/history_search"),
-    // );
-    // println!("{:?}", a);
+    let mut my_commands: Vec<String> = Vec::new();
+    for line in history.lines() {
+        let myline = line.unwrap();
+        let parsed = parse_content(&myline);
+        my_commands.push(parsed.command);
+    }
 
-    // let date_time = NaiveDateTime::from_timestamp(a.timestamp, 0);
+    let my_commands = my_commands.join("\n");
 
-    // println!("{}", date_time);
+    let options = SkimOptionsBuilder::default()
+        .height(Some("50%"))
+        .multi(true)
+        .build()
+        .unwrap();
 
-    // timestamp conversion
+    // `SkimItemReader` is a helper to turn any `BufRead` into a stream of `SkimItem`
+    // `SkimItem` was implemented for `AsRef<str>` by default
+    let item_reader = SkimItemReader::default();
+    let items = item_reader.of_bufread(Cursor::new(my_commands));
+
+    // `run_with` would read and show items from the stream
+    let selected_items = Skim::run_with(&options, Some(items))
+        .map(|out| out.selected_items)
+        .unwrap_or_else(|| Vec::new());
+
+    for item in selected_items.iter() {
+        print!("{}{}", item.output(), "\n");
+    }
+
+    Ok(())
 }
