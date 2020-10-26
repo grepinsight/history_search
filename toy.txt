@@ -1,6 +1,5 @@
-2720 allee 2020-05-09 00:08:32 @ /Users/allee/src/history_search |     23  1589008111 cdd
-2720 allee 2020-05-09 00:08:37 @ /Users/allee/src/history_search |     24  1589008116 git-personal
-2720 allee 2020-05-09 00:08:41 @ /Users/allee/src/history_search |     25  1589008121 cat .envrc
-2720 allee 2020-05-09 00:09:01 @ /Users/allee/src/history_search |     26  1589008141 direnv allow
-2720 allee 2020-05-09 00:09:02 @ /Users/allee/src/history_search |     27  1589008141 llt
-
+2720 @@@ 1589008111 @@@ "/Users/allee/src/history_search" @@@ cdd
+2720 @@@ 1589008116 @@@ "/Users/allee/src/history_search" @@@ git-personal
+2720 @@@ 1589008121 @@@ "/Users/allee/src/history_search" @@@ cat .envrc
+2720 @@@ 1589008141 @@@ "/Users/allee/src/history_search" @@@ direnv allow
+2720 @@@ 1589008141 @@@ "/Users/allee/src/history_search" @@@ llt

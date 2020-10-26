@@ -9,6 +9,7 @@ use std::io::Cursor;
 use std::io::{self, BufReader};
 use std::path::PathBuf;
 
+
 #[derive(Debug)]
 struct History {
     pid: i64,
