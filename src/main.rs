@@ -60,10 +60,12 @@ fn parse_content(example: &str) -> Option<History> {
     Some(a)
 }
 
-static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history.test";
+static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
 
 fn main() -> io::Result<()> {
-    let config_dir_op = std::env::var_os("XDG_CONFIG_HOME")
+
+    // set up config
+    let config_dir_op = std::env::var_os("ETERNAL_HISTORY_FILE")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
         .or_else(|| dirs::home_dir().map(|d| d.join(ETERNAL_HISTORY_FILE)));
