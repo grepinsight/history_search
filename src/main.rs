@@ -9,6 +9,8 @@ use std::io::Cursor;
 use std::io::{self, BufReader};
 use std::path::PathBuf;
 
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
 
 #[derive(Debug)]
 struct History {
@@ -90,9 +92,15 @@ fn main() -> io::Result<()> {
         .map(|out| out.selected_items)
         .unwrap_or_else(|| Vec::new());
 
-    for item in selected_items.iter() {
-        print!("{}{}", item.output(), "\n");
-    }
+    let a = if let Some(a) = selected_items.first() {
+        a.output().to_string()
+    } else {
+        return Ok(());
+    };
+
+    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+    println!("{}", a);
+    ctx.set_contents(a.to_owned()).unwrap();
 
     Ok(())
 }
