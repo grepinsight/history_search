@@ -1,8 +1,5 @@
-use chrono::format::strftime::StrftimeItems;
 use chrono::NaiveDateTime;
 use skim::prelude::*;
-use std::env;
-use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Cursor;
