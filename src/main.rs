@@ -43,10 +43,17 @@ fn parse_content(example: &str) -> Option<History> {
     let re = regex::Regex::new(r"\s*@@@\s*").unwrap();
     let parts: Vec<&str> = re.split(example).collect();
 
-    let pid: i64 = parts[0].parse().unwrap();
+    let pid: i64 = match parts[0].parse() {
+        Ok(pid) => pid,
+        Err(_) => return None,
+    };
     let timestamp: i64 = parts[1].parse().unwrap();
     let pwd = PathBuf::from(parts[2]);
-    let command = parts[3].to_string();
+    let command = if let Some(command) = parts.get(3) {
+        command.to_string()
+    } else {
+        return None;
+    };
 
     let a = History::new(pid, timestamp, pwd, command);
 
@@ -67,8 +74,10 @@ fn main() -> io::Result<()> {
     let mut my_commands: Vec<String> = Vec::new();
     for line in history.lines() {
         let myline = line.unwrap();
-        let parsed = parse_content(&myline).unwrap();
-        my_commands.push(parsed.command);
+        let parsed = parse_content(&myline);
+        if let Some(parsed) = parsed {
+            my_commands.push(parsed.command);
+        }
     }
 
     let my_commands = my_commands.join("\n");
