@@ -15,7 +15,7 @@ lazy_static! {
     static ref RE: regex::Regex = regex::Regex::new(r"\s*@@@\s*").unwrap();
 }
 #[derive(Debug)]
-struct History {
+pub struct History {
     pid: i64,
     timestamp: i64,
     pwd: PathBuf,
@@ -39,10 +39,8 @@ impl History {
     }
 }
 
-// 89563 @@@ 1603443779 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hi
-// 89563 @@@ 1603443782 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hello world
 
-fn parse_content(example: &str) -> Option<History> {
+pub fn parse_content(example: &str) -> Option<History> {
     // let example =
     //     "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
 
@@ -53,7 +51,7 @@ fn parse_content(example: &str) -> Option<History> {
         Err(_) => return None,
     };
     let timestamp: i64 = parts[1].parse().unwrap();
-    let pwd = PathBuf::from(parts[2]);
+    let pwd = PathBuf::from(parts[2].replace("\"", ""));
     let command = if let Some(command) = parts.get(3) {
         command.to_string()
     } else {
@@ -80,9 +78,7 @@ fn main() -> io::Result<()> {
 
     let mut my_commands: Vec<String> = Vec::new();
     for line in history.lines() {
-        let myline = line.unwrap();
-        let parsed = parse_content(&myline);
-        if let Some(parsed) = parsed {
+        if let Some(parsed) = parse_content(&line?) {
             my_commands.push(parsed.command);
         }
     }
@@ -116,4 +112,63 @@ fn main() -> io::Result<()> {
     ctx.set_contents(a.to_owned()).unwrap();
 
     Ok(())
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        let line = r##"89563 @@@ 1603443779 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hi"##;
+        let parsed = parse_content(line);
+        let h = parsed.unwrap();
+        assert_eq!(h.pid, 89563);
+        assert_eq!(h.timestamp, 1603443779);
+        assert_eq!(h.pwd, PathBuf::from("/Users/allee/.tmux/plugins/tmux-thumbs"));
+        assert_eq!(h.command, "echo hi");
+    } 
+
+    #[test]
+    fn multiline_history() {
+        let line = r##"8508 @@@ 1604165171 @@@ "/Users/allee/src/master-rust/test_things" @@@ echo "hi
+my name is
+albert""##;
+        let parsed = parse_content(line);
+        let h = parsed.unwrap();
+        assert_eq!(h.pid, 8508);
+        assert_eq!(h.timestamp, 1604165171);
+        assert_eq!(h.pwd, PathBuf::from("/Users/allee/src/master-rust/test_things"));
+        assert_eq!(h.command, "echo \"hi\nmy name is\nalbert\"");
+
+    }
+    
+    #[test]
+    fn ill_defined_line() {
+        let line = "89563 @@@ 1603443779 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\"";
+        let parsed = parse_content(line);
+        assert!(parsed.is_none());
+
+        let line = "randomstring";
+        let parsed = parse_content(line);
+        assert!(parsed.is_none());
+    } 
+
+    // #[test]
+    // fn multiline_test() {
+
+    //     let hf = File::open("multiline_test_input.txt").unwrap();
+    //     let bfs = BufReader::new(hf);
+
+
+    //     bfs.read_until()
+    //     let a = bfs.split(b':');
+    //     let stdin = std::io::stdin();
+    //     // lock it
+    //     let lock = stdin.lock();
+
+        
+        
+
+    // }
 }
