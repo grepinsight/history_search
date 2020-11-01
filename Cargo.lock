@@ -440,6 +440,7 @@ dependencies = [
  "chrono",
  "clipboard",
  "dirs 3.0.1",
+ "lazy_static",
  "regex",
  "skim",
 ]
@@ -697,9 +698,9 @@ checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
 
 [[package]]
 name = "skim"
-version = "0.9.1"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "141d16fb63a98e3ed0e4012546074967bffbdb94dc251f00f497b5343ad4beb5"
+checksum = "f7bafdd926cc7718a511c995e37026aa5c25826fe90ab2bb4c72eff948b43811"
 dependencies = [
  "beef",
  "bitflags",

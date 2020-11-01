@@ -9,6 +9,11 @@ use std::path::PathBuf;
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
 
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref RE: regex::Regex = regex::Regex::new(r"\s*@@@\s*").unwrap();
+}
 #[derive(Debug)]
 struct History {
     pid: i64,
@@ -40,8 +45,8 @@ impl History {
 fn parse_content(example: &str) -> Option<History> {
     // let example =
     //     "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
-    let re = regex::Regex::new(r"\s*@@@\s*").unwrap();
-    let parts: Vec<&str> = re.split(example).collect();
+
+    let parts: Vec<&str> = RE.split(example).collect();
 
     let pid: i64 = match parts[0].parse() {
         Ok(pid) => pid,
