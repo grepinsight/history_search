@@ -102,7 +102,9 @@ fn main() -> io::Result<()> {
         .unwrap_or_else(|| Vec::new());
 
     let a = if let Some(a) = selected_items.first() {
-        a.output().to_string()
+        a.output()
+        .replace("\\n", "\n")
+        .to_string()
     } else {
         return Ok(());
     };
