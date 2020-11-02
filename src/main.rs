@@ -11,9 +11,33 @@ use clipboard::ClipboardProvider;
 
 use lazy_static::lazy_static;
 
+use structopt::StructOpt;
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "Renaming Tool")]
+struct Options {
+    #[structopt(short, long)]
+    here: bool,
+
+    #[structopt(short, long)]
+    today: bool,
+
+    #[structopt(short, long)]
+    yesterday: bool,
+
+    #[structopt(short, long)]
+    begin: Option<String>,
+
+    #[structopt(short, long)]
+    end: Option<String>,
+}
+
 lazy_static! {
     static ref RE: regex::Regex = regex::Regex::new(r"\s*@@@\s*").unwrap();
 }
+
+static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
+
 #[derive(Debug)]
 pub struct History {
     pid: i64,
@@ -39,7 +63,6 @@ impl History {
     }
 }
 
-
 pub fn parse_content(example: &str) -> Option<History> {
     // let example =
     //     "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
@@ -63,9 +86,32 @@ pub fn parse_content(example: &str) -> Option<History> {
     Some(a)
 }
 
-static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
+fn get_commands<I>(lines: I, options: Options, here_directory: PathBuf) -> Vec<String>
+where
+    I: Iterator<Item = Result<String, std::io::Error>>,
+{
+    let mut my_commands: Vec<String> = Vec::new();
+    for line in lines {
+        let mut include = true;
+        if let Some(parsed) = parse_content(&line.unwrap()) {
+            if options.here {
+                let a = parsed.pwd;
+                if a == here_directory {
+                    include &= true;
+                } else {
+                    include &= false;
+                }
+            }
 
+            if include {
+                my_commands.push(parsed.command);
+            }
+        }
+    }
+    my_commands
+}
 fn main() -> io::Result<()> {
+    let options = Options::from_args();
 
     // set up config
     let config_dir_op = std::env::var_os("ETERNAL_HISTORY_FILE")
@@ -75,15 +121,8 @@ fn main() -> io::Result<()> {
 
     let history = File::open(config_dir_op.unwrap())?;
     let history = BufReader::new(history);
-
-    let mut my_commands: Vec<String> = Vec::new();
-    for line in history.lines() {
-        if let Some(parsed) = parse_content(&line?) {
-            my_commands.push(parsed.command);
-        }
-    }
-
-    let my_commands = my_commands.join("\n");
+    let here_directory = std::env::current_dir().unwrap();
+    let my_commands = get_commands(history.lines(), options, here_directory).join("\n");
 
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
@@ -102,9 +141,7 @@ fn main() -> io::Result<()> {
         .unwrap_or_else(|| Vec::new());
 
     let a = if let Some(a) = selected_items.first() {
-        a.output()
-        .replace("\\n", "\n")
-        .to_string()
+        a.output().replace("\\n", "\n").to_string()
     } else {
         return Ok(());
     };
@@ -116,20 +153,36 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        let line = r##"89563 @@@ 1603443779 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hi"##;
+        let line =
+            r##"89563 @@@ 1603443779 @@@ "/Users/allee/.tmux/plugins/tmux-thumbs" @@@ echo hi"##;
         let parsed = parse_content(line);
         let h = parsed.unwrap();
         assert_eq!(h.pid, 89563);
         assert_eq!(h.timestamp, 1603443779);
-        assert_eq!(h.pwd, PathBuf::from("/Users/allee/.tmux/plugins/tmux-thumbs"));
+        assert_eq!(
+            h.pwd,
+            PathBuf::from("/Users/allee/.tmux/plugins/tmux-thumbs")
+        );
         assert_eq!(h.command, "echo hi");
-    } 
+    }
+    #[test]
+    fn test_get_commands_here() {
+        let cmd1 =
+            r##"89563 @@@ 1603443779 @@@ "/my/path/1" @@@ echo path1"##;
+        let cmd2 =
+            r##"89563 @@@ 1603443779 @@@ "/my/path/2" @@@ echo path2"##;
+        let commands = vec![Ok(String::from(cmd1)), Ok(String::from(cmd2))];
+        let options= Options{ here: true, today: false, yesterday: false, begin: None, end: None};
+        let here_directory = PathBuf::from("/my/path/1");
+
+        let cmds = get_commands(commands.into_iter(), options, here_directory);
+        assert_eq!(cmds, vec![String::from("echo path1")])
+    }
 
     #[test]
     fn multiline_history() {
@@ -140,11 +193,13 @@ albert""##;
         let h = parsed.unwrap();
         assert_eq!(h.pid, 8508);
         assert_eq!(h.timestamp, 1604165171);
-        assert_eq!(h.pwd, PathBuf::from("/Users/allee/src/master-rust/test_things"));
+        assert_eq!(
+            h.pwd,
+            PathBuf::from("/Users/allee/src/master-rust/test_things")
+        );
         assert_eq!(h.command, "echo \"hi\nmy name is\nalbert\"");
-
     }
-    
+
     #[test]
     fn ill_defined_line() {
         let line = "89563 @@@ 1603443779 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\"";
@@ -154,7 +209,7 @@ albert""##;
         let line = "randomstring";
         let parsed = parse_content(line);
         assert!(parsed.is_none());
-    } 
+    }
 
     // #[test]
     // fn multiline_test() {
@@ -162,15 +217,11 @@ albert""##;
     //     let hf = File::open("multiline_test_input.txt").unwrap();
     //     let bfs = BufReader::new(hf);
 
-
     //     bfs.read_until()
     //     let a = bfs.split(b':');
     //     let stdin = std::io::stdin();
     //     // lock it
     //     let lock = stdin.lock();
-
-        
-        
 
     // }
 }
