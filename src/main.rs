@@ -5,6 +5,9 @@ use std::io::prelude::*;
 use std::io::Cursor;
 use std::io::{self, BufReader};
 use std::path::PathBuf;
+use std::time;
+use std::time::SystemTime;
+use chrono::Utc;
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
@@ -41,13 +44,13 @@ static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
 #[derive(Debug)]
 pub struct History {
     pid: i64,
-    timestamp: i64,
+    timestamp: SystemTime,
     pwd: PathBuf,
     command: String,
 }
 
 impl History {
-    pub fn new(pid: i64, timestamp: i64, pwd: PathBuf, command: String) -> History {
+    pub fn new(pid: i64, timestamp: SystemTime, pwd: PathBuf, command: String) -> History {
         History {
             pid,
             timestamp,
@@ -56,11 +59,6 @@ impl History {
         }
     }
 
-    pub fn isodate(&self) -> String {
-        let date_time = NaiveDateTime::from_timestamp(self.timestamp, 0);
-
-        date_time.to_string()
-    }
 }
 
 pub fn parse_content(example: &str) -> Option<History> {
@@ -73,7 +71,9 @@ pub fn parse_content(example: &str) -> Option<History> {
         Ok(pid) => pid,
         Err(_) => return None,
     };
-    let timestamp: i64 = parts[1].parse().unwrap();
+    let timestamp_ = parts[1].parse().unwrap();
+    let timestamp = time::UNIX_EPOCH + time::Duration::from_secs(timestamp_);
+
     let pwd = PathBuf::from(parts[2].replace("\"", ""));
     let command = if let Some(command) = parts.get(3) {
         command.to_string()
@@ -94,13 +94,32 @@ where
     for line in lines {
         let mut include = true;
         if let Some(parsed) = parse_content(&line.unwrap()) {
+
+            // here filter
             if options.here {
                 let a = parsed.pwd;
-                if a == here_directory {
-                    include &= true;
-                } else {
+                if a != here_directory {
                     include &= false;
-                }
+                } 
+            }
+
+            //  time filter
+            if options.yesterday {
+                let n = time::SystemTime::now();
+                let d = time::Duration::from_secs(86400);
+                let y = n - d;
+
+                if parsed.timestamp < y {
+                    include &= false;
+                } 
+            }
+
+            if options.today {
+                let t = floor_date(time::SystemTime::now());
+
+                if parsed.timestamp < t {
+                    include &= false;
+                } 
             }
 
             if include {
@@ -109,6 +128,13 @@ where
         }
     }
     my_commands
+}
+
+fn floor_date(t: SystemTime) -> SystemTime {
+    chrono::prelude::DateTime::<Utc>::from(t)
+                            .date()
+                            .and_hms(0, 0, 0)
+                            .into()
 }
 fn main() -> io::Result<()> {
     let options = Options::from_args();
@@ -122,6 +148,14 @@ fn main() -> io::Result<()> {
     let history = File::open(config_dir_op.unwrap())?;
     let history = BufReader::new(history);
     let here_directory = std::env::current_dir().unwrap();
+
+    let now = time::SystemTime::now();
+    let today_filter: &bool = &options.today;
+
+    let t1dbefore = time::Duration::from_secs(60 * 60 * 24);
+    let a = timefilter::TimeFilter::before(&now, "1day");
+
+
     let my_commands = get_commands(history.lines(), options, here_directory).join("\n");
 
     let options = SkimOptionsBuilder::default()
@@ -163,7 +197,7 @@ mod tests {
         let parsed = parse_content(line);
         let h = parsed.unwrap();
         assert_eq!(h.pid, 89563);
-        assert_eq!(h.timestamp, 1603443779);
+        assert_eq!(h.timestamp, time::UNIX_EPOCH + time::Duration::from_secs(1603443779));
         assert_eq!(
             h.pwd,
             PathBuf::from("/Users/allee/.tmux/plugins/tmux-thumbs")
@@ -196,7 +230,7 @@ albert""##;
         let parsed = parse_content(line);
         let h = parsed.unwrap();
         assert_eq!(h.pid, 8508);
-        assert_eq!(h.timestamp, 1604165171);
+        assert_eq!(h.timestamp, time::UNIX_EPOCH + time::Duration::from_secs(1604165171));
         assert_eq!(
             h.pwd,
             PathBuf::from("/Users/allee/src/master-rust/test_things")
@@ -213,6 +247,33 @@ albert""##;
         let line = "randomstring";
         let parsed = parse_content(line);
         assert!(parsed.is_none());
+    }
+
+    #[test]
+    fn test_day_filter() {
+
+        use chrono::NaiveDate;
+
+        // today
+        let t = time::UNIX_EPOCH + time::Duration::from_secs(1604424029);
+
+        // yesterday
+        let t1d = humantime::parse_duration("1day").unwrap();
+        let y = t - t1d;
+        
+        let dt = chrono::prelude::DateTime::<Utc>::from(t);
+        let dy = chrono::prelude::DateTime::<Utc>::from(y);
+
+        println!("{}", dt.format("%Y-%m-%d").to_string());
+        println!("{}", dy.format("%Y-%m-%d").to_string());
+        println!("{}", t > y);
+
+        let dt = chrono::prelude::DateTime::<Utc>::from(t);
+        let dt = dt.date().and_hms(0, 0, 0);
+        let dt2 = time::SystemTime::from(dt);
+        println!("{:?}", dt);
+        println!("{:?}", floor_date(t));
+        
     }
 
     // #[test]
