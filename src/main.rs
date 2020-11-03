@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::Utc;
 use skim::prelude::*;
 use std::fs::File;
 use std::io::prelude::*;
@@ -7,7 +7,6 @@ use std::io::{self, BufReader};
 use std::path::PathBuf;
 use std::time;
 use std::time::SystemTime;
-use chrono::Utc;
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
@@ -58,7 +57,6 @@ impl History {
             command,
         }
     }
-
 }
 
 pub fn parse_content(example: &str) -> Option<History> {
@@ -94,13 +92,12 @@ where
     for line in lines {
         let mut include = true;
         if let Some(parsed) = parse_content(&line.unwrap()) {
-
             // here filter
             if options.here {
                 let a = parsed.pwd;
                 if a != here_directory {
                     include &= false;
-                } 
+                }
             }
 
             //  time filter
@@ -111,7 +108,7 @@ where
 
                 if parsed.timestamp < y {
                     include &= false;
-                } 
+                }
             }
 
             if options.today {
@@ -119,7 +116,7 @@ where
 
                 if parsed.timestamp < t {
                     include &= false;
-                } 
+                }
             }
 
             if include {
@@ -132,10 +129,11 @@ where
 
 fn floor_date(t: SystemTime) -> SystemTime {
     chrono::prelude::DateTime::<Utc>::from(t)
-                            .date()
-                            .and_hms(0, 0, 0)
-                            .into()
+        .date()
+        .and_hms(0, 0, 0)
+        .into()
 }
+
 fn main() -> io::Result<()> {
     let options = Options::from_args();
 
@@ -145,19 +143,14 @@ fn main() -> io::Result<()> {
         .filter(|p| p.is_absolute())
         .or_else(|| dirs::home_dir().map(|d| d.join(ETERNAL_HISTORY_FILE)));
 
+    // get commands from history
     let history = File::open(config_dir_op.unwrap())?;
     let history = BufReader::new(history);
     let here_directory = std::env::current_dir().unwrap();
 
-    let now = time::SystemTime::now();
-    let today_filter: &bool = &options.today;
-
-    let t1dbefore = time::Duration::from_secs(60 * 60 * 24);
-    let a = timefilter::TimeFilter::before(&now, "1day");
-
-
     let my_commands = get_commands(history.lines(), options, here_directory).join("\n");
 
+    // fuzzy finding step
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))
         .multi(true)
@@ -180,6 +173,7 @@ fn main() -> io::Result<()> {
         return Ok(());
     };
 
+    // clipboard step
     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
     println!("{}", a);
     ctx.set_contents(a.to_owned()).unwrap();
@@ -197,7 +191,10 @@ mod tests {
         let parsed = parse_content(line);
         let h = parsed.unwrap();
         assert_eq!(h.pid, 89563);
-        assert_eq!(h.timestamp, time::UNIX_EPOCH + time::Duration::from_secs(1603443779));
+        assert_eq!(
+            h.timestamp,
+            time::UNIX_EPOCH + time::Duration::from_secs(1603443779)
+        );
         assert_eq!(
             h.pwd,
             PathBuf::from("/Users/allee/.tmux/plugins/tmux-thumbs")
@@ -230,7 +227,10 @@ albert""##;
         let parsed = parse_content(line);
         let h = parsed.unwrap();
         assert_eq!(h.pid, 8508);
-        assert_eq!(h.timestamp, time::UNIX_EPOCH + time::Duration::from_secs(1604165171));
+        assert_eq!(
+            h.timestamp,
+            time::UNIX_EPOCH + time::Duration::from_secs(1604165171)
+        );
         assert_eq!(
             h.pwd,
             PathBuf::from("/Users/allee/src/master-rust/test_things")
@@ -251,16 +251,13 @@ albert""##;
 
     #[test]
     fn test_day_filter() {
-
-        use chrono::NaiveDate;
-
         // today
         let t = time::UNIX_EPOCH + time::Duration::from_secs(1604424029);
 
         // yesterday
         let t1d = humantime::parse_duration("1day").unwrap();
         let y = t - t1d;
-        
+
         let dt = chrono::prelude::DateTime::<Utc>::from(t);
         let dy = chrono::prelude::DateTime::<Utc>::from(y);
 
@@ -270,23 +267,7 @@ albert""##;
 
         let dt = chrono::prelude::DateTime::<Utc>::from(t);
         let dt = dt.date().and_hms(0, 0, 0);
-        let dt2 = time::SystemTime::from(dt);
         println!("{:?}", dt);
         println!("{:?}", floor_date(t));
-        
     }
-
-    // #[test]
-    // fn multiline_test() {
-
-    //     let hf = File::open("multiline_test_input.txt").unwrap();
-    //     let bfs = BufReader::new(hf);
-
-    //     bfs.read_until()
-    //     let a = bfs.split(b':');
-    //     let stdin = std::io::stdin();
-    //     // lock it
-    //     let lock = stdin.lock();
-
-    // }
 }
