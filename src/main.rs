@@ -172,12 +172,16 @@ mod tests {
     }
     #[test]
     fn test_get_commands_here() {
-        let cmd1 =
-            r##"89563 @@@ 1603443779 @@@ "/my/path/1" @@@ echo path1"##;
-        let cmd2 =
-            r##"89563 @@@ 1603443779 @@@ "/my/path/2" @@@ echo path2"##;
+        let cmd1 = r##"89563 @@@ 1603443779 @@@ "/my/path/1" @@@ echo path1"##;
+        let cmd2 = r##"89563 @@@ 1603443779 @@@ "/my/path/2" @@@ echo path2"##;
         let commands = vec![Ok(String::from(cmd1)), Ok(String::from(cmd2))];
-        let options= Options{ here: true, today: false, yesterday: false, begin: None, end: None};
+        let options = Options {
+            here: true,
+            today: false,
+            yesterday: false,
+            begin: None,
+            end: None,
+        };
         let here_directory = PathBuf::from("/my/path/1");
 
         let cmds = get_commands(commands.into_iter(), options, here_directory);
