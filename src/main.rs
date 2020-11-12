@@ -1,4 +1,5 @@
 use chrono::Utc;
+use itertools::Itertools;
 use skim::prelude::*;
 use std::fs::File;
 use std::io::prelude::*;
@@ -125,7 +126,7 @@ where
             }
         }
     }
-    my_commands
+    my_commands.into_iter().unique().collect()
 }
 
 fn floor_date(t: SystemTime) -> SystemTime {
