@@ -180,9 +180,14 @@ fn main() -> io::Result<()> {
     };
 
     // clipboard step
-    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
     println!("{}", a);
-    ctx.set_contents(a.to_owned()).unwrap();
+    let ctx = ClipboardProvider::new();
+
+    if let Ok(ctxr) = ctx {
+        // FIXME wierd hack to type annotate
+        let mut xx: ClipboardContext = ctxr;
+        xx.set_contents(a.to_owned()).unwrap();
+    }
 
     Ok(())
 }
