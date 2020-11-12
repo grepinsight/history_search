@@ -282,4 +282,30 @@ albert""##;
         println!("{:?}", dt);
         println!("{:?}", floor_date(t));
     }
+
+    #[test]
+    fn test_remove_duplicate_cmds() {
+        let cmd1 = r##"89563 @@@ 1603443779 @@@ "/my/path/1" @@@ echo path1"##;
+        let cmd2 = r##"89563 @@@ 1603443779 @@@ "/my/path/1" @@@ echo path1"##;
+        let cmd3 = r##"89563 @@@ 1603443779 @@@ "/my/path/1" @@@ echo path2"##;
+        let commands = vec![
+            Ok(String::from(cmd1)),
+            Ok(String::from(cmd2)),
+            Ok(String::from(cmd3)),
+        ];
+        let options = Options {
+            here: false,
+            today: false,
+            yesterday: false,
+            begin: None,
+            end: None,
+        };
+        let here_directory = PathBuf::from("/my/path/1");
+
+        let cmds = get_commands(commands.into_iter(), options, here_directory);
+        assert_eq!(
+            cmds,
+            vec![String::from("echo path1"), String::from("echo path2"),]
+        )
+    }
 }
