@@ -38,7 +38,8 @@ lazy_static! {
     static ref RE: regex::Regex = regex::Regex::new(r"\s*@@@\s*").unwrap();
 }
 
-static ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
+static ZSH_ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
+static BASH_ETERNAL_HISTORY_FILE: &str = ".bash_eternal_history";
 
 #[derive(Debug)]
 pub struct History {
@@ -137,11 +138,16 @@ fn floor_date(t: SystemTime) -> SystemTime {
 fn main() -> io::Result<()> {
     let options = Options::from_args();
 
-    // set up config
+    // check wehther current shell is zsh or bash
+    let eternal_history_file = match std::env::var_os("ZSH_VERSION") {
+        Some(_) => ZSH_ETERNAL_HISTORY_FILE,
+        None => BASH_ETERNAL_HISTORY_FILE,
+    };
+
     let config_dir_op = std::env::var_os("ETERNAL_HISTORY_FILE")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
-        .or_else(|| dirs::home_dir().map(|d| d.join(ETERNAL_HISTORY_FILE)));
+        .or_else(|| dirs::home_dir().map(|d| d.join(eternal_history_file)));
 
     // get commands from history
     let history = File::open(config_dir_op.unwrap())?;
