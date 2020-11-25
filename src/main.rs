@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Cursor;
 use std::io::{self, BufReader};
+use std::net::TcpStream;
 use std::path::PathBuf;
 use std::time;
 use std::time::SystemTime;
@@ -33,6 +34,10 @@ struct Options {
 
     #[structopt(short, long)]
     end: Option<String>,
+
+    /// selected commands will be sent to this address
+    #[structopt(short, long)]
+    socket_addr: Option<String>,
 }
 
 lazy_static! {
@@ -86,7 +91,7 @@ pub fn parse_content(example: &str) -> Option<History> {
     Some(a)
 }
 
-fn get_commands<I>(lines: I, options: Options, here_directory: PathBuf) -> Vec<String>
+fn get_commands<I>(lines: I, options: &Options, here_directory: PathBuf) -> Vec<String>
 where
     I: Iterator<Item = Result<String, std::io::Error>>,
 {
@@ -137,7 +142,7 @@ fn floor_date(t: SystemTime) -> SystemTime {
 }
 
 fn main() -> io::Result<()> {
-    let options = Options::from_args();
+    let opts = Options::from_args();
 
     // check wehther current shell is zsh or bash
     let eternal_history_file = match std::env::var_os("ZSH_VERSION") {
@@ -155,7 +160,7 @@ fn main() -> io::Result<()> {
     let history = BufReader::new(history);
     let here_directory = std::env::current_dir().unwrap();
 
-    let my_commands = get_commands(history.lines(), options, here_directory).join("\n");
+    let my_commands = get_commands(history.lines(), &opts, here_directory).join("\n");
 
     // fuzzy finding step
     let options = SkimOptionsBuilder::default()
@@ -182,12 +187,18 @@ fn main() -> io::Result<()> {
 
     // clipboard step
     println!("{}", a);
-    let ctx = ClipboardProvider::new();
 
-    if let Ok(ctxr) = ctx {
-        // FIXME wierd hack to type annotate
-        let mut xx: ClipboardContext = ctxr;
-        xx.set_contents(a.to_owned()).unwrap();
+    if let Some(socket_addr) = opts.socket_addr {
+        let mut stream = TcpStream::connect(socket_addr).unwrap();
+        stream.write(a.as_bytes()).unwrap();
+    } else {
+        let ctx = ClipboardProvider::new();
+
+        if let Ok(ctxr) = ctx {
+            // FIXME wierd hack to type annotate
+            let mut xx: ClipboardContext = ctxr;
+            xx.set_contents(a.to_owned()).unwrap();
+        }
     }
 
     Ok(())
@@ -224,10 +235,11 @@ mod tests {
             yesterday: false,
             begin: None,
             end: None,
+            socket_addr: None,
         };
         let here_directory = PathBuf::from("/my/path/1");
 
-        let cmds = get_commands(commands.into_iter(), options, here_directory);
+        let cmds = get_commands(commands.into_iter(), &options, here_directory);
         assert_eq!(cmds, vec![String::from("echo path1")])
     }
 
@@ -299,13 +311,21 @@ albert""##;
             yesterday: false,
             begin: None,
             end: None,
+            socket_addr: None,
         };
         let here_directory = PathBuf::from("/my/path/1");
 
-        let cmds = get_commands(commands.into_iter(), options, here_directory);
+        let cmds = get_commands(commands.into_iter(), &options, here_directory);
         assert_eq!(
             cmds,
             vec![String::from("echo path1"), String::from("echo path2"),]
         )
+    }
+
+    #[test]
+    fn test_tcp_stuff() {
+        let mut stream = TcpStream::connect("127.0.0.1:2224").unwrap();
+        let lenz = stream.write(b"hello world").unwrap();
+        assert_eq!(lenz, 11)
     }
 }
