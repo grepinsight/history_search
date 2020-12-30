@@ -160,6 +160,7 @@ fn main() -> io::Result<()> {
     let history = BufReader::new(history);
     let here_directory = std::env::current_dir().unwrap();
 
+    // the main algorithm
     let my_commands = get_commands(history.lines(), &opts, here_directory).join("\n");
 
     // fuzzy finding step
