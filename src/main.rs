@@ -150,13 +150,13 @@ fn main() -> io::Result<()> {
         None => BASH_ETERNAL_HISTORY_FILE,
     };
 
-    let config_dir_op = std::env::var_os("ETERNAL_HISTORY_FILE")
+    let history_file = std::env::var_os("ETERNAL_HISTORY_FILE")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
         .or_else(|| dirs::home_dir().map(|d| d.join(eternal_history_file)));
 
     // get commands from history
-    let history = File::open(config_dir_op.unwrap())?;
+    let history = File::open(history_file.unwrap())?;
     let history = BufReader::new(history);
     let here_directory = std::env::current_dir().unwrap();
 
