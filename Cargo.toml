@@ -1,6 +1,6 @@
 [package]
 name = "history_search"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Albert Lee <allee@myriad.com>"]
 edition = "2018"
 
