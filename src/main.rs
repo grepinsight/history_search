@@ -18,6 +18,18 @@ use lazy_static::lazy_static;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
+enum Command {
+    /// init command
+    Init {
+        /// shell to apply init on
+        shell: Option<String>,
+
+        #[structopt(long)]
+        print_full_init: bool,
+    },
+}
+
+#[derive(StructOpt, Debug)]
 #[structopt(name = "Renaming Tool")]
 struct Options {
     #[structopt(short, long)]
@@ -38,6 +50,9 @@ struct Options {
     /// selected commands will be sent to this address
     #[structopt(short, long)]
     socket_addr: Option<String>,
+
+    #[structopt(subcommand)]
+    cmd: Option<Command>,
 }
 
 lazy_static! {
@@ -46,6 +61,9 @@ lazy_static! {
 
 static ZSH_ETERNAL_HISTORY_FILE: &str = ".zsh_eternal_history";
 static BASH_ETERNAL_HISTORY_FILE: &str = ".bash_eternal_history";
+
+const BASH_INIT: &str = include_str!("history_search.bash");
+const ZSH_INIT: &str = include_str!("history_search.zsh");
 
 #[derive(Debug)]
 pub struct History {
@@ -141,8 +159,56 @@ fn floor_date(t: SystemTime) -> SystemTime {
         .into()
 }
 
+fn path_to_hsearch() -> io::Result<String> {
+    let current_exe = std::env::current_exe()?
+        .to_str()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "can't convert to str"))?
+        .to_string();
+    Ok(current_exe)
+}
+
 fn main() -> io::Result<()> {
     let opts = Options::from_args();
+
+    let hsearch = path_to_hsearch()?.replace("\"", "\"'\"'\"");
+
+    if let Some(Command::Init {
+        shell: shell_name,
+        print_full_init: true,
+    }) = &opts.cmd
+    {
+        match shell_name.as_ref().map(String::as_str) {
+            Some("zsh") => {
+                print!("{}", ZSH_INIT);
+                return Ok(());
+            }
+            Some("bash") => {
+                print!("{}", BASH_INIT);
+                return Ok(());
+            }
+            _ => println!("meh"),
+        }
+    }
+
+    if let Some(Command::Init {
+        shell: shell_name,
+        print_full_init: false,
+    }) = &opts.cmd
+    {
+        match shell_name.as_ref().map(String::as_str) {
+            Some("zsh") => {
+                let script = format!("source <(\"{}\" init zsh --print-full-init)", hsearch);
+                print!("{}", script);
+                return Ok(());
+            }
+            Some("bash") => {
+                let script = format!("source <(\"{}\" init bash --print-full-init)", hsearch);
+                print!("{}", script);
+                return Ok(());
+            }
+            _ => println!("meh"),
+        }
+    }
 
     // check wehther current shell is zsh or bash
     let eternal_history_file = match std::env::var_os("ZSH_VERSION") {
