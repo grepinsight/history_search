@@ -1,4 +1,4 @@
-# History Search
+# History Search (hsearch)
 
 Context-aware Bash/Zsh eternal history manager
 
