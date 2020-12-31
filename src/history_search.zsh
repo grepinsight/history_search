@@ -14,7 +14,7 @@ hsearch_precmd() {
 # If precmd/preexec arrays are not already set, set them.
 [[ -z "${precmd_functions+1}" ]] && precmd_functions=()
 
-# If starship precmd/preexec functions are already hooked, don't double-hook them
+# If hsearch precmd/preexec functions are already hooked, don't double-hook them
 # to avoid unnecessary performance degradation in nested shells
 if [[ -z ${precmd_functions[(re)hsearch_precmd]} ]]; then
     precmd_functions+=(hsearch_precmd)
