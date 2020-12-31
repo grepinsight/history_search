@@ -1,17 +1,7 @@
 # History Search
 
+Bash/Zsh eternal history manager
 
-# Installation
-
-## Prerequisite
-
-```
-```
-
-```
-git clone 
-cargo install --path .
-```
 
 ## 📜 Installation
 
@@ -30,5 +20,6 @@ cargo install --path .
    ##### From source on [crates.io](https://crates.io/):
 
    ```sh
-   cargo install starship
+   cargo install hsearch
+   ```
 
