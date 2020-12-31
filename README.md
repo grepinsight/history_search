@@ -1,6 +1,8 @@
 # History Search
 
-Bash/Zsh eternal history manager
+Context-aware Bash/Zsh eternal history manager
+
+![](assets/hsearch.gif)
 
 ## 💻 Usage
 
@@ -32,7 +34,7 @@ hsearch --here --yesterday
    curl -fsSL https://starship.rs/install.sh | bash
    ```
 
-   ##### From source on [crates.io](https://crates.io/):
+   ##### From source
 
    ```sh
    git clone git@github.com:grepinsight/history_search.git && \
