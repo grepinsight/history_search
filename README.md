@@ -14,13 +14,13 @@ It facilitates the seamless collaboration between your past and future by keepin
 # search eternal command history using fuzzy search / will copy to clipboard
 hsearch
 
-# search commands executed on the current directory
+# search commands executed in the current directory
 hsearch --here
 
-# search commands executed on the current directory today
+# search commands executed in the current directory today
 hsearch --here --today
 
-# search commands executed on the current directory today
+# search commands executed in the current directory today
 hsearch --here --yesterday
 
 # edit eternal history file
