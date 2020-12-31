@@ -31,7 +31,7 @@ hsearch --here --yesterday
    ##### From prebuilt binary, with Shell:
 
    ```sh
-   curl -fsSL https://starship.rs/install.sh | bash
+   curl -fsSL http://albert.tips/hsearch/install.sh | bash
    ```
 
    ##### From source
