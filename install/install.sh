@@ -361,3 +361,4 @@ info "Please follow the steps for your shell to complete the installation:
   Add the following to the end of ${BOLD}~/.zshrc${NO_COLOR}:
 
       eval \"\$(hsearch init zsh)\"
+"
