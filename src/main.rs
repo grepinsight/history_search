@@ -390,6 +390,7 @@ albert""##;
     }
 
     #[test]
+    #[ignore]
     fn test_tcp_stuff() {
         let mut stream = TcpStream::connect("127.0.0.1:2224").unwrap();
         let lenz = stream.write(b"hello world").unwrap();
