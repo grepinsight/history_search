@@ -2,7 +2,7 @@
 
 Bash/Zsh eternal history manager
 
-## Usage
+## 💻 Usage
 
 ```sh
 # search eternal command history using fuzzy search / will copy to clipboard
@@ -43,18 +43,19 @@ hsearch --here --yesterday
 2. Add this line to bashrc or zshrc
 
    ```sh
-   # zsh
+   # in bash
    eval "$(hsearch init bash)"
 
-   # zsh
+   # in zsh
    eval "$(hsearch init zsh)"
    ```
 
-## Advanced Usage
+## 🚀 Advanced Usage
 
 ### Using hsearch in a remote machine
 
 Clipboard can be configured to work with remote machines.
+
 See <https://seancoates.com/blogs/remote-pbcopy> for details
 
 ```sh
