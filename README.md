@@ -20,6 +20,8 @@ Bash/Zsh eternal history manager
    ##### From source on [crates.io](https://crates.io/):
 
    ```sh
-   cargo install hsearch
+   git clone git@github.com:grepinsight/history_search.git && \
+      cd history_search && \
+      cargo install --path .
    ```
 
