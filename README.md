@@ -1,6 +1,6 @@
 # History Search (hsearch)
 
-📜 + 🔎 = ❤️
+> 📜 + 🔎 = ❤️
 
 `hsearch` is a context-aware Bash/Zsh eternal history manager.
 It facilitates the seamless collaboration between your past and your future by keeping track of bash/zsh history in a plain text file (`~/.zsh_eternal_history` or `~/.bash_eternal_history`) and providing a fuzzy search capability.
