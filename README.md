@@ -42,13 +42,13 @@ hsearch --here --yesterday
 
 2. Add this line to bashrc or zshrc
 
-  ```sh
-  # zsh
-  eval "$(hsearch init bash)"
+   ```sh
+   # zsh
+   eval "$(hsearch init bash)"
 
-  # zsh
-  eval "$(hsearch init zsh)"
-  ```
+   # zsh
+   eval "$(hsearch init zsh)"
+   ```
 
 ## Advanced Usage
 
