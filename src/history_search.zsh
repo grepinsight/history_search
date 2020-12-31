@@ -1,3 +1,4 @@
+export ETERNAL_HISTORY_FILE="$HOME/.zsh_eternal_history"
 # Will be run before every prompt draw
 hsearch_precmd() {
     echo -n \
