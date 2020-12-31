@@ -31,7 +31,7 @@ vim ~/.bash_eternal_history # or ~/.zsh_eternal_history for zsh
 
 ### Getting Started
 
-1. Install the **history_search** binary:
+1. Install the **hsearch** binary:
 
    #### Install Latest Version
 
