@@ -11,4 +11,4 @@ record_external_history() {
     history 1 | perl -pe 's/^\s*\d+\s*\d+\s*//' >> $ETERNAL_HISTORY_FILE
 }
 
-PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ; }"record_external_history
+export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND}"record_external_history
