@@ -38,7 +38,7 @@ vim ~/.bash_eternal_history # or ~/.zsh_eternal_history for zsh
    ##### From prebuilt binary, with Shell:
 
    ```sh
-   curl -fsSL http://albert.tips/hsearch/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/grepinsight/history_search/master/install/install.sh | bash
    ```
 
    ##### From source
