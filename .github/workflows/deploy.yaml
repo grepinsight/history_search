@@ -44,7 +44,7 @@ jobs:
 
       - name: Setup | musl tools
         if: matrix.target == 'x86_64-unknown-linux-musl'
-        run: sudo apt install -y musl-tools libxcb-shape0-dev
+        run: sudo apt install -y musl-tools libxcb-shape0-dev libxcb-xfixes0-dev
 
       - name: Build | Build
         run: cargo build --release --target ${{ matrix.target }}
