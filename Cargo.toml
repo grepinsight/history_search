@@ -17,9 +17,6 @@ structopt = "0.3.20"
 humantime = "2.0"
 itertools = "0.9.0"
 
-[features]
-# Vendor OpenSSL, use this if you have trouble cross-compiling hsearch
-tls-vendored = ["native-tls/vendored"]
 
 [[bin]]
 name = "hsearch"
