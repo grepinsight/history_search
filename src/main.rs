@@ -303,6 +303,7 @@ mod tests {
             begin: None,
             end: None,
             socket_addr: None,
+            cmd: None
         };
         let here_directory = PathBuf::from("/my/path/1");
 
@@ -379,6 +380,7 @@ albert""##;
             begin: None,
             end: None,
             socket_addr: None,
+            cmd: None,
         };
         let here_directory = PathBuf::from("/my/path/1");
 
