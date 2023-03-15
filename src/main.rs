@@ -84,11 +84,11 @@ impl History {
     }
 }
 
-pub fn parse_content(example: &str) -> Option<History> {
+pub fn parse_content(saved_history: &str) -> Option<History> {
     // let example =
     //     "89563 @@@ 1603443782 @@@ \"/Users/allee/.tmux/plugins/tmux-thumbs\" @@@ echo hello world";
 
-    let parts: Vec<&str> = RE.split(example).collect();
+    let parts: Vec<&str> = RE.split(saved_history).collect();
 
     let pid: i64 = match parts[0].parse() {
         Ok(pid) => pid,
