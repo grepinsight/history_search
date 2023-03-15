@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{Date, DateTime, NaiveDate, Utc};
 use itertools::Itertools;
 use skim::prelude::*;
 use std::fs::File;
@@ -30,7 +30,7 @@ enum Command {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Renaming Tool")]
+#[structopt(name = "Eternal History Search Tool")]
 struct Options {
     #[structopt(short, long)]
     here: bool,
@@ -41,11 +41,11 @@ struct Options {
     #[structopt(short, long)]
     yesterday: bool,
 
-    #[structopt(short, long)]
-    begin: Option<String>,
+    #[structopt(short, long, parse(try_from_str = parse_date))]
+    begin: Option<Date<Utc>>,
 
-    #[structopt(short, long)]
-    end: Option<String>,
+    #[structopt(short, long, parse(try_from_str = parse_date))]
+    end: Option<Date<Utc>>,
 
     /// selected commands will be sent to this address
     #[structopt(short, long)]
@@ -53,6 +53,13 @@ struct Options {
 
     #[structopt(subcommand)]
     cmd: Option<Command>,
+}
+
+fn parse_date(s: &str) -> Result<Date<Utc>, String> {
+    match NaiveDate::parse_from_str(s, "%Y-%m-%d") {
+        Ok(parsed) => Ok(Date::<Utc>::from_utc(parsed, Utc)),
+        Err(e) => Err(format!("Error parsing date: {}", e)),
+    }
 }
 
 lazy_static! {
@@ -140,6 +147,21 @@ where
                 let t = floor_date(time::SystemTime::now());
 
                 if parsed.timestamp < t {
+                    include &= false;
+                }
+            }
+
+            // date range filter
+            if let Some(begin) = options.begin {
+                let parsed_date = DateTime::<Utc>::from(parsed.timestamp).date();
+                if parsed_date < begin {
+                    include &= false;
+                }
+            }
+
+            if let Some(end) = options.end {
+                let parsed_date = DateTime::<Utc>::from(parsed.timestamp).date();
+                if parsed_date > end {
                     include &= false;
                 }
             }
@@ -303,7 +325,7 @@ mod tests {
             begin: None,
             end: None,
             socket_addr: None,
-            cmd: None
+            cmd: None,
         };
         let here_directory = PathBuf::from("/my/path/1");
 
